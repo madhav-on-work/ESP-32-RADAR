@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ESP32 360° Drone Detection Radar</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #020807;
+    color: #7dffb2;
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+}
+
+header {
+    width: 100%;
+    padding: 18px 30px;
+    border-bottom: 1px solid #176b4c;
+    background: #04120e;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #6cff9b;
+}
+
+.status-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #00ff66;
+    box-shadow: 0 0 12px #00ff66;
+}
+
+.dashboard {
+
+    display: grid;
+
+    grid-template-columns:
+    minmax(300px, 1fr)
+    320px;
+
+    gap: 20px;
+
+    padding: 25px;
+
+    max-width: 1450px;
+
+    margin: auto;
+}
+
+.radar-panel {
+
+    background: #030b08;
+
+    border: 1px solid #176b4c;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    min-height: 700px;
+
+    overflow: hidden;
+}
+
+canvas {
+
+    width: min(90vw, 700px);
+
+    height: min(90vw, 700px);
+
+    max-width: 700px;
+
+    max-height: 700px;
+}
+
+.radar-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.heat-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #9fe8c0;
+}
+
+.heat-legend-bar {
+    width: min(60vw, 260px);
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(
+        90deg,
+        rgb(46,16,101),
+        rgb(30,58,138),
+        rgb(8,145,178),
+        rgb(22,163,74),
+        rgb(234,179,8),
+        rgb(249,115,22),
+        rgb(220,38,38)
+    );
+}
+
+.info-panel {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+.card {
+
+    background: #04120e;
+
+    border: 1px solid #176b4c;
+
+    border-radius: 10px;
+
+    padding: 20px;
+}
+
+.card-title {
+
+    font-size: 13px;
+
+    color: #42b980;
+
+    letter-spacing: 2px;
+
+    margin-bottom: 12px;
+}
+
+.value {
+
+    font-size: 30px;
+
+    font-weight: bold;
+
+    color: #7dffb2;
+}
+
+.unit {
+
+    font-size: 14px;
+
+    color: #4d9975;
+}
+
+.detection-status {
+
+    text-align: center;
+
+    padding: 20px;
+
+    border-radius: 10px;
+
+    font-size: 20px;
+
+    font-weight: bold;
+
+    letter-spacing: 2px;
+
+    background: #07120e;
+
+    border: 1px solid #176b4c;
+}
+
+.detected {
+
+    color: #00ff66;
+
+    text-shadow: 0 0 12px #00ff66;
+}
+
+.not-detected {
+
+    color: #888;
+}
+
+.target-list {
+
+    max-height: 280px;
+
+    overflow-y: auto;
+}
+
+.target-item {
+
+    padding: 10px;
+
+    margin-bottom: 8px;
+
+    background: #07130f;
+
+    border-left: 3px solid #00e676;
+
+    font-size: 13px;
+}
+
+footer {
+
+    text-align: center;
+
+    padding: 15px;
+
+    color: #327455;
+
+    font-size: 12px;
+}
+
+@media (max-width: 900px) {
+
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-panel {
+        min-height: auto;
+        padding: 10px;
+    }
+
+    header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+    <div class="title">
+        ESP32 DRONE DETECTION RADAR
+    </div>
+
+    <div class="status-box">
+
+        <div class="status-dot"></div>
+
+        <span id="connectionStatus">
+            CONNECTING...
+        </span>
+
+    </div>
+
+</header>
+
+
+<div class="dashboard">
+
+    <div class="radar-panel">
+
+        <div class="radar-stack">
+
+            <canvas id="radarCanvas"></canvas>
+
+            <div class="heat-legend">
+                <span>LOW</span>
+                <div class="heat-legend-bar"></div>
+                <span>HIGH</span>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="info-panel">
+
+        <div id="detectionStatus"
+             class="detection-status not-detected">
+
+            NO TARGET
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                MAX SIGNAL INTENSITY
+            </div>
+
+            <span id="intensityValue" class="value">
+                0
+            </span>
+
+            <span class="unit">%</span>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                AVERAGE DOPPLER FREQUENCY
+            </div>
+
+            <span id="frequencyValue" class="value">
+                0
+            </span>
+
+            <span class="unit">Hz</span>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                ESTIMATED TARGET SPEED
+            </div>
+
+            <span id="speedValue" class="value">
+                0.0
+            </span>
+
+            <span class="unit">km/h</span>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                STRONGEST DETECTION ANGLE
+            </div>
+
+            <span id="angleValue" class="value">
+                0
+            </span>
+
+            <span class="unit">°</span>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                ACTIVE SECTORS
+            </div>
+
+            <span id="activeValue" class="value">
+                0
+            </span>
+
+            <span class="unit">/ 36</span>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                DETECTED SECTORS
+            </div>
+
+            <div id="targetList" class="target-list">
+                Waiting for ThingSpeak data...
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<footer>
+
+    ESP32 • 360° RADAR • THINGSPEAK CLOUD MONITORING
+
+</footer>
+
+
+<script>
+
+
+/* =========================================
+   THINGSPEAK CONFIGURATION
+========================================= */
+
+const CHANNEL_ID = 3465056;
+
+
+/* PUT YOUR READ API KEY HERE */
+
+const READ_API_KEY = "ZM8Z9F6ZBC9OY5V0";
+
+
+/*
+Field 1 = CSV of 36 intensities
+
+Field 2 = Average frequency
+*/
+
+const UPDATE_INTERVAL = 2000;
+
+
+/* =========================================
+   RADAR SETTINGS
+========================================= */
+
+const NUM_SECTORS = 36;
+
+const STEP_ANGLE = 10;
+
+const DETECTION_THRESHOLD = 18;
+
+
+/* =========================================
+   JET-STYLE HEAT COLOR SCALE
+   (purple -> blue -> cyan -> green -> yellow -> orange -> red)
+========================================= */
+
+const HEAT_STOPS = [
+    { p: 0.00, c: [46, 16, 101] },
+    { p: 0.18, c: [30, 58, 138] },
+    { p: 0.36, c: [8, 145, 178] },
+    { p: 0.52, c: [22, 163, 74] },
+    { p: 0.68, c: [234, 179, 8] },
+    { p: 0.84, c: [249, 115, 22] },
+    { p: 1.00, c: [220, 38, 38] }
+];
+
+function intensityToColor(value) {
+
+    const t = Math.max(0, Math.min(1, value / 100));
+
+    let a = HEAT_STOPS[0];
+    let b = HEAT_STOPS[HEAT_STOPS.length - 1];
+
+    for (let i = 0; i < HEAT_STOPS.length - 1; i++) {
+        if (t >= HEAT_STOPS[i].p && t <= HEAT_STOPS[i + 1].p) {
+            a = HEAT_STOPS[i];
+            b = HEAT_STOPS[i + 1];
+            break;
+        }
+    }
+
+    const span = (b.p - a.p) || 1;
+    const lt = (t - a.p) / span;
+
+    const r = Math.round(a.c[0] + (b.c[0] - a.c[0]) * lt);
+    const g = Math.round(a.c[1] + (b.c[1] - a.c[1]) * lt);
+    const bch = Math.round(a.c[2] + (b.c[2] - a.c[2]) * lt);
+
+    return `rgb(${r}, ${g}, ${bch})`;
+}
+
+
+/* =========================================
+   CANVAS
+========================================= */
+
+const canvas =
+    document.getElementById("radarCanvas");
+
+const ctx =
+    canvas.getContext("2d");
+
+
+let centerX;
+
+let centerY;
+
+let radarRadius;
+
+
+/* Smooth rotating sweep */
+
+let sweepAngle = 0;
+
+
+/*
+36 intensity values received
+from ThingSpeak
+*/
+
+let sectorIntensity =
+    new Array(NUM_SECTORS).fill(0);
+
+
+/* Average frequency */
+
+let averageFrequency = 0;
+
+/* =========================================
+   ML TELEMETRY (Field 3 + Field 4)
+========================================= */
+
+let targetClass = 0; // 0 = Clear, 1 = Human, 2 = Drone
+let targetSpeed = 0.0;
+
+// Last ThingSpeak entry ID
+let lastEntryID = null;
+
+// Time when we last received NEW data
+let lastNewDataTime = null;
+
+// ESP32 is considered offline if
+// no new data arrives for 30 seconds
+const OFFLINE_TIMEOUT = 30000;
+
+
+/* =========================================
+   RESIZE CANVAS
+========================================= */
+
+function resizeCanvas() {
+
+    const size =
+        Math.min(
+            window.innerWidth * 0.75,
+            700
+        );
+
+    canvas.width = size;
+
+    canvas.height = size;
+
+    centerX =
+        canvas.width / 2;
+
+    centerY =
+        canvas.height / 2;
+
+    radarRadius =
+        canvas.width * 0.40;
+}
+
+
+window.addEventListener(
+    "resize",
+    resizeCanvas
+);
+
+
+resizeCanvas();
+
+
+/* =========================================
+   DRAW RADAR
+========================================= */
+
+function drawRadar() {
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /* Background */
+
+    ctx.fillStyle = "#020807";
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /* =====================================
+       TARGET POINTS
+       Each active sector becomes ONE glowing
+       point, not a filled wedge.
+
+       Angle  = sector direction (bearing)
+       Radius = distance from center, derived
+                from signal intensity (stronger
+                signal placed closer in, as an
+                approximation of range -- swap
+                in a real distance sensor's
+                value here later if you add one)
+    ===================================== */
+
+    const minRadius = radarRadius * 0.08;
+    const maxRadius = radarRadius * 0.95;
+
+    for (let i = 0; i < NUM_SECTORS; i++) {
+
+        const intensity = sectorIntensity[i];
+
+        if (intensity < DETECTION_THRESHOLD) {
+            continue;
+        }
+
+        const centerAngle =
+            (i * STEP_ANGLE + STEP_ANGLE / 2 - 90) * Math.PI / 180;
+
+        const pointRadius =
+            minRadius + (1 - intensity / 100) * (maxRadius - minRadius);
+
+        const px = centerX + pointRadius * Math.cos(centerAngle);
+        const py = centerY + pointRadius * Math.sin(centerAngle);
+
+        const blobSize = 18 + (intensity / 100) * 34;
+
+        const color = intensityToColor(intensity);
+        const rgbNums = color.slice(4, -1);
+
+        const gradient = ctx.createRadialGradient(px, py, 0, px, py, blobSize);
+        gradient.addColorStop(0, `rgba(${rgbNums}, 0.95)`);
+        gradient.addColorStop(0.5, `rgba(${rgbNums}, 0.45)`);
+        gradient.addColorStop(1, `rgba(${rgbNums}, 0)`);
+
+        ctx.beginPath();
+        ctx.arc(px, py, blobSize, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(px, py, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+    }
+
+
+    /* =====================================
+       RANGE RINGS
+    ===================================== */
+
+    for (
+        let i = 1;
+        i <= 5;
+        i++
+    ) {
+
+        const radius =
+            radarRadius * i / 5;
+
+
+        ctx.beginPath();
+
+        ctx.arc(
+            centerX,
+            centerY,
+            radius,
+            0,
+            Math.PI * 2
+        );
+
+
+        ctx.strokeStyle =
+            "rgba(0,255,130,0.25)";
+
+        ctx.lineWidth = 1;
+
+        ctx.stroke();
+
+    }
+
+
+    /* =====================================
+       ANGLE LINES
+    ===================================== */
+
+    for (
+        let angle = 0;
+        angle < 360;
+        angle += 30
+    ) {
+
+        const rad =
+            (angle - 90)
+            *
+            Math.PI / 180;
+
+
+        const x =
+            centerX +
+            radarRadius *
+            Math.cos(rad);
+
+
+        const y =
+            centerY +
+            radarRadius *
+            Math.sin(rad);
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            centerX,
+            centerY
+        );
+
+        ctx.lineTo(
+            x,
+            y
+        );
+
+        ctx.strokeStyle =
+            "rgba(0,255,130,0.15)";
+
+        ctx.stroke();
+
+
+        /* Angle labels */
+
+        const labelRadius =
+            radarRadius + 25;
+
+
+        const labelX =
+            centerX +
+            labelRadius *
+            Math.cos(rad);
+
+
+        const labelY =
+            centerY +
+            labelRadius *
+            Math.sin(rad);
+
+
+        ctx.fillStyle =
+            "rgba(120,255,180,0.75)";
+
+        ctx.font =
+            "12px Arial";
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            angle + "°",
+            labelX,
+            labelY
+        );
+
+    }
+
+
+    /* =====================================
+       RADAR SWEEP TRAIL
+    ===================================== */
+
+    const trailLength = 55;
+
+
+    for (
+        let i = trailLength;
+        i > 0;
+        i--
+    ) {
+
+        const currentAngle =
+            sweepAngle - i;
+
+
+        const currentRad =
+            (currentAngle - 90)
+            *
+            Math.PI / 180;
+
+
+        const nextRad =
+            (currentAngle + 1 - 90)
+            *
+            Math.PI / 180;
+
+
+        const alpha =
+            (trailLength - i)
+            /
+            trailLength
+            *
+            0.15;
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            centerX,
+            centerY
+        );
+
+
+        ctx.arc(
+            centerX,
+            centerY,
+            radarRadius,
+            currentRad,
+            nextRad
+        );
+
+
+        ctx.closePath();
+
+
+        ctx.fillStyle =
+            "rgba(0,255,120," +
+            alpha +
+            ")";
+
+
+        ctx.fill();
+
+    }
+
+
+    /* =====================================
+       MAIN SWEEP LINE
+    ===================================== */
+
+    const sweepRad =
+        (sweepAngle - 90)
+        *
+        Math.PI / 180;
+
+
+    const sweepX =
+        centerX +
+        radarRadius *
+        Math.cos(sweepRad);
+
+
+    const sweepY =
+        centerY +
+        radarRadius *
+        Math.sin(sweepRad);
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        centerX,
+        centerY
+    );
+
+    ctx.lineTo(
+        sweepX,
+        sweepY
+    );
+
+
+    ctx.strokeStyle =
+        "#5cffaa";
+
+    ctx.shadowColor =
+        "#00ff66";
+
+    ctx.shadowBlur =
+        15;
+
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+
+
+    /* =====================================
+       CENTER POINT
+    ===================================== */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        centerX,
+        centerY,
+        7,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        "#00ff66";
+
+    ctx.fill();
+
+}
+
+
+/* =========================================
+   DRAW DETECTED TARGETS
+========================================= */
+ function drawTargets() {
+
+    for (let i = 0; i < NUM_SECTORS; i++) {
+
+        const intensity =
+            sectorIntensity[i];
+
+        // Ignore background noise
+        if (intensity < DETECTION_THRESHOLD) {
+            continue;
+        }
+
+        const angle =
+            i * STEP_ANGLE;
+
+        const rad =
+            (angle - 90) *
+            Math.PI / 180;
+
+
+        // Normalize intensity
+        const normalized =
+            (intensity - DETECTION_THRESHOLD) /
+            (100 - DETECTION_THRESHOLD);
+
+
+        // Target distance from center
+        const targetRadius =
+            radarRadius *
+            (0.30 + normalized * 0.60);
+
+
+        const x =
+            centerX +
+            targetRadius *
+            Math.cos(rad);
+
+        const y =
+            centerY +
+            targetRadius *
+            Math.sin(rad);
+
+
+        const size =
+            5 + normalized * 8;
+
+
+        // ==================================
+        // HEAT MAP TARGET COLOR
+        // ==================================
+
+        let targetColor;
+        let glowColor;
+
+
+        if (intensity < 60) {
+
+            // BLUE
+            targetColor =
+                "rgba(0,150,255,1)";
+
+            glowColor =
+                "#0096ff";
+
+        }
+        else if (intensity < 80) {
+
+            // CYAN
+            targetColor =
+                "rgba(0,230,255,1)";
+
+            glowColor =
+                "#00e6ff";
+
+        }
+        else {
+
+            // ORANGE = STRONG TARGET
+            targetColor =
+                "rgba(255,130,0,1)";
+
+            glowColor =
+                "#ff8200";
+
+        }
+
+
+        // ==================================
+        // TARGET GLOW
+        // ==================================
+
+        ctx.shadowColor =
+            glowColor;
+
+        ctx.shadowBlur =
+            20;
+
+
+        // Target circle
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            y,
+            size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle =
+            targetColor;
+
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+
+
+        // ==================================
+        // TARGET CROSS
+        // ==================================
+
+        ctx.strokeStyle =
+            targetColor;
+
+        ctx.lineWidth = 1.5;
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x - size * 2,
+            y
+        );
+
+        ctx.lineTo(
+            x + size * 2,
+            y
+        );
+
+
+        ctx.moveTo(
+            x,
+            y - size * 2
+        );
+
+        ctx.lineTo(
+            x,
+            y + size * 2
+        );
+
+        ctx.stroke();
+
+    }
+
+}
+
+
+/* =========================================
+   ANIMATION
+========================================= */
+
+function animateRadar() {
+
+    /*
+    Smooth continuous rotation
+    */
+
+    sweepAngle += 0.8;
+
+
+    if (
+        sweepAngle >= 360
+    ) {
+
+        sweepAngle = 0;
+
+    }
+
+
+    drawRadar();
+
+
+    requestAnimationFrame(
+        animateRadar
+    );
+
+}
+
+
+animateRadar();
+
+
+/* =========================================
+   FETCH THINGSPEAK DATA
+========================================= */
+
+async function fetchThingSpeakData() {
+
+    try {
+
+        document
+            .getElementById(
+                "connectionStatus"
+            )
+            .textContent =
+            "UPDATING...";
+
+
+        /*
+        Get latest channel entry
+        */
+
+        const url =
+            "https://api.thingspeak.com/channels/"
+            +
+            CHANNEL_ID
+            +
+            "/feeds.json?api_key="
+            +
+            READ_API_KEY
+            +
+            "&results=1";
+
+
+        const response =
+            await fetch(url);
+
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                "ThingSpeak request failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !data.feeds ||
+            data.feeds.length === 0
+        ) {
+
+            throw new Error(
+                "No ThingSpeak data found"
+            );
+
+        }
+
+
+        /*
+        Get latest feed
+        */
+
+        const latestFeed =
+            data.feeds[
+                data.feeds.length - 1
+            ];
+// =====================================
+// CHECK IF NEW ESP32 DATA ARRIVED
+// =====================================
+
+const currentEntryID =
+    latestFeed.entry_id;
+
+
+// If this is a new ThingSpeak entry
+if (currentEntryID !== lastEntryID) {
+
+    lastEntryID =
+        currentEntryID;
+
+    lastNewDataTime =
+        Date.now();
+
+}
+
+
+        /*
+        FIELD 1
+
+        Example:
+
+        "10,45,90,12,..."
+        */
+
+        const intensityCSV =
+            latestFeed.field1;
+
+
+        /*
+        FIELD 2
+
+        Average frequency
+        */
+
+        const frequency =
+            parseFloat(
+                latestFeed.field2
+            );
+
+
+        /*
+        Convert CSV into array
+        */
+
+        if (
+            intensityCSV
+        ) {
+
+            const values =
+                intensityCSV
+                .split(",");
+
+
+            sectorIntensity =
+                values
+                .map(
+                    value =>
+                        parseFloat(
+                            value.trim()
+                        )
+                )
+                .filter(
+                    value =>
+                        !isNaN(value)
+                );
+
+
+            /*
+            Ensure exactly
+            36 sectors
+            */
+
+            while (
+                sectorIntensity.length
+                <
+                NUM_SECTORS
+            ) {
+
+                sectorIntensity.push(0);
+
+            }
+
+
+            sectorIntensity =
+                sectorIntensity.slice(
+                    0,
+                    NUM_SECTORS
+                );
+
+        }
+
+
+        if (
+            !isNaN(frequency)
+        ) {
+
+            averageFrequency =
+                frequency;
+
+        }
+
+
+        /*
+        FIELD 3
+
+        AI target classification
+        0 = Clear, 1 = Human, 2 = Drone
+        */
+
+        targetClass =
+            parseInt(latestFeed.field3) || 0;
+
+
+        /*
+        FIELD 4
+
+        Estimated target speed (km/h)
+        */
+
+        targetSpeed =
+            parseFloat(latestFeed.field4) || 0.0;
+
+
+        updateDashboard();
+
+
+     // =====================================
+// CHECK ESP32 STATUS
+// =====================================
+
+const statusElement =
+    document.getElementById(
+        "connectionStatus"
+    );
+
+
+// If no new data has been received
+if (
+    lastNewDataTime !== null &&
+    Date.now() - lastNewDataTime > OFFLINE_TIMEOUT
+) {
+
+    statusElement.textContent =
+        "ESP32 OFFLINE";
+
+    document
+        .querySelector(".status-dot")
+        .style.background =
+        "#ff3333";
+
+    document
+        .querySelector(".status-dot")
+        .style.boxShadow =
+        "0 0 12px #ff3333";
+
+}
+else {
+
+    statusElement.textContent =
+        "SYSTEM ONLINE";
+
+    document
+        .querySelector(".status-dot")
+        .style.background =
+        "#00ff66";
+
+    document
+        .querySelector(".status-dot")
+        .style.boxShadow =
+        "0 0 12px #00ff66";
+
+}
+
+
+    }
+    catch (
+        error
+    ) {
+
+        console.error(error);
+
+
+        document
+            .getElementById(
+                "connectionStatus"
+            )
+            .textContent =
+            "CONNECTION ERROR";
+
+    }
+
+}
+
+
+/* =========================================
+   UPDATE DASHBOARD
+========================================= */
+
+function updateDashboard() {
+
+    let maxIntensity = 0;
+
+    let maxSector = 0;
+
+    let activeSectors = 0;
+
+
+    for (
+        let i = 0;
+        i < NUM_SECTORS;
+        i++
+    ) {
+
+        const intensity =
+            sectorIntensity[i];
+
+
+        if (
+            intensity >=
+            DETECTION_THRESHOLD
+        ) {
+
+            activeSectors++;
+
+        }
+
+
+        if (
+            intensity >
+            maxIntensity
+        ) {
+
+            maxIntensity =
+                intensity;
+
+            maxSector =
+                i;
+
+        }
+
+    }
+
+
+    const strongestAngle =
+        maxSector *
+        STEP_ANGLE;
+
+
+    /* Update values */
+
+    document
+        .getElementById(
+            "intensityValue"
+        )
+        .textContent =
+        maxIntensity.toFixed(0);
+
+
+    document
+        .getElementById(
+            "frequencyValue"
+        )
+        .textContent =
+        averageFrequency.toFixed(1);
+
+
+    document
+        .getElementById(
+            "speedValue"
+        )
+        .textContent =
+        targetSpeed.toFixed(1);
+
+
+    document
+        .getElementById(
+            "angleValue"
+        )
+        .textContent =
+        strongestAngle;
+
+
+    document
+        .getElementById(
+            "activeValue"
+        )
+        .textContent =
+        activeSectors;
+
+
+    /* Detection status */
+
+    const statusElement =
+        document.getElementById(
+            "detectionStatus"
+        );
+
+
+    if (
+        targetClass === 2
+    ) {
+
+        statusElement.textContent =
+            "ALERT: DRONE DETECTED";
+
+        statusElement.className =
+            "detection-status detected";
+
+        statusElement.style.color =
+            "#ff3333";
+
+        statusElement.style.borderColor =
+            "#ff3333";
+
+        statusElement.style.boxShadow =
+            "0 0 15px rgba(255, 51, 51, 0.4)";
+
+    }
+    else if (
+        targetClass === 1
+    ) {
+
+        statusElement.textContent =
+            "TARGET DETECTED: HUMAN";
+
+        statusElement.className =
+            "detection-status detected";
+
+        statusElement.style.color =
+            "#ffbb00";
+
+        statusElement.style.borderColor =
+            "#ffbb00";
+
+        statusElement.style.boxShadow =
+            "0 0 15px rgba(255, 187, 0, 0.4)";
+
+    }
+    else {
+
+        statusElement.textContent =
+            "NO TARGET / CLEAR";
+
+        statusElement.className =
+            "detection-status not-detected";
+
+        statusElement.style.color =
+            "#888";
+
+        statusElement.style.borderColor =
+            "#176b4c";
+
+        statusElement.style.boxShadow =
+            "none";
+
+    }
+
+
+    /* Detected sector list */
+
+    const list =
+        document.getElementById(
+            "targetList"
+        );
+
+
+    list.innerHTML = "";
+
+
+    let detectionFound =
+        false;
+
+
+    for (
+        let i = 0;
+        i < NUM_SECTORS;
+        i++
+    ) {
+
+        const intensity =
+            sectorIntensity[i];
+
+
+        if (
+            intensity >=
+            DETECTION_THRESHOLD
+        ) {
+
+            detectionFound =
+                true;
+
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+
+            item.className =
+                "target-item";
+
+
+            item.innerHTML =
+                "SECTOR: "
+                +
+                (i * STEP_ANGLE)
+                +
+                "°"
+                +
+                "<br>"
+                +
+                "INTENSITY: "
+                +
+                intensity.toFixed(0)
+                +
+                "%";
+
+
+            list.appendChild(
+                item
+            );
+
+        }
+
+    }
+
+
+    if (
+        !detectionFound
+    ) {
+
+        list.textContent =
+            "No targets detected";
+
+    }
+
+}
+
+
+/* =========================================
+   START SYSTEM
+========================================= */
+
+
+/* Get data immediately */
+
+fetchThingSpeakData();
+function checkOfflineStatus() {
+
+    if (
+        lastNewDataTime !== null &&
+        Date.now() - lastNewDataTime > OFFLINE_TIMEOUT
+    ) {
+
+        document
+            .getElementById(
+                "connectionStatus"
+            )
+            .textContent =
+            "ESP32 OFFLINE";
+
+
+        document
+            .querySelector(".status-dot")
+            .style.background =
+            "#ff3333";
+
+
+        document
+            .querySelector(".status-dot")
+            .style.boxShadow =
+            "0 0 12px #ff3333";
+
+    }
+
+}
+setInterval(
+    checkOfflineStatus,
+    1000
+);
+
+
+/* Refresh data */
+
+setInterval(
+    fetchThingSpeakData,
+    UPDATE_INTERVAL
+);
+
+
+</script>
+
+</body>
+</html>
