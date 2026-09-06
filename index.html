@@ -1,1687 +1,1815 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>ESP32 360° Drone Detection Radar</title>
-
-<style>
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    background: #020807;
-    color: #7dffb2;
-    font-family: Arial, Helvetica, sans-serif;
-    min-height: 100vh;
-}
-
-header {
-    width: 100%;
-    padding: 18px 30px;
-    border-bottom: 1px solid #176b4c;
-    background: #04120e;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.title {
-    font-size: 22px;
-    font-weight: bold;
-    letter-spacing: 2px;
-    color: #6cff9b;
-}
-
-.status-box {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.status-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #00ff66;
-    box-shadow: 0 0 12px #00ff66;
-}
-
-.dashboard {
-
-    display: grid;
-
-    grid-template-columns:
-    minmax(300px, 1fr)
-    320px;
-
-    gap: 20px;
-
-    padding: 25px;
-
-    max-width: 1450px;
-
-    margin: auto;
-}
-
-.radar-panel {
-
-    background: #030b08;
-
-    border: 1px solid #176b4c;
-
-    border-radius: 12px;
-
-    display: flex;
-
-    justify-content: center;
-
-    align-items: center;
-
-    min-height: 700px;
-
-    overflow: hidden;
-}
-
-canvas {
-
-    width: min(90vw, 700px);
-
-    height: min(90vw, 700px);
-
-    max-width: 700px;
-
-    max-height: 700px;
-}
-
-.radar-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-}
-
-.heat-legend {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: #9fe8c0;
-}
-
-.heat-legend-bar {
-    width: min(60vw, 260px);
-    height: 10px;
-    border-radius: 5px;
-    background: linear-gradient(
-        90deg,
-        rgb(46,16,101),
-        rgb(30,58,138),
-        rgb(8,145,178),
-        rgb(22,163,74),
-        rgb(234,179,8),
-        rgb(249,115,22),
-        rgb(220,38,38)
-    );
-}
-
-.info-panel {
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 18px;
-}
-
-.card {
-
-    background: #04120e;
-
-    border: 1px solid #176b4c;
-
-    border-radius: 10px;
-
-    padding: 20px;
-}
-
-.card-title {
-
-    font-size: 13px;
-
-    color: #42b980;
-
-    letter-spacing: 2px;
-
-    margin-bottom: 12px;
-}
-
-.value {
-
-    font-size: 30px;
-
-    font-weight: bold;
-
-    color: #7dffb2;
-}
-
-.unit {
-
-    font-size: 14px;
-
-    color: #4d9975;
-}
-
-.detection-status {
-
-    text-align: center;
-
-    padding: 20px;
-
-    border-radius: 10px;
-
-    font-size: 20px;
-
-    font-weight: bold;
-
-    letter-spacing: 2px;
-
-    background: #07120e;
-
-    border: 1px solid #176b4c;
-}
-
-.detected {
-
-    color: #00ff66;
-
-    text-shadow: 0 0 12px #00ff66;
-}
-
-.not-detected {
-
-    color: #888;
-}
-
-.target-list {
-
-    max-height: 280px;
-
-    overflow-y: auto;
-}
-
-.target-item {
-
-    padding: 10px;
-
-    margin-bottom: 8px;
-
-    background: #07130f;
-
-    border-left: 3px solid #00e676;
-
-    font-size: 13px;
-}
-
-footer {
-
-    text-align: center;
-
-    padding: 15px;
-
-    color: #327455;
-
-    font-size: 12px;
-}
-
-@media (max-width: 900px) {
-
-    .dashboard {
-        grid-template-columns: 1fr;
-    }
-
-    .radar-panel {
-        min-height: auto;
-        padding: 10px;
-    }
-
-    header {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K.R.A.M. | Kinematic Radar and Activity Monitor</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-base: #f0f4f8;
+            --bg-card: #ffffff;
+            --bg-card-secondary: #f8fafc;
+            --bg-header: #ffffff;
+            --border-color: #d1d9e6;
+            --border-focus: #0284c7;
+            --border-glow: rgba(2, 132, 199, 0.25);
+            
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --text-accent: #0369a1;
+            
+            --radar-bg: #071018;
+            --radar-bezel: #1e293b;
+            --radar-ring: rgba(14, 165, 233, 0.28);
+            --radar-subring: rgba(14, 165, 233, 0.14);
+            --radar-axis: rgba(14, 165, 233, 0.22);
+            --radar-sweep: rgba(14, 165, 233, 0.35);
+            --radar-sweep-line: #38bdf8;
+            --radar-sweep-glow: #0ea5e9;
+            --radar-label: #38bdf8;
+            
+            --status-online: #16a34a;
+            --status-online-glow: rgba(22, 163, 74, 0.4);
+            --status-offline: #dc2626;
+            --status-offline-glow: rgba(220, 38, 38, 0.4);
+            --status-demo: #854d0e;
+            --status-demo-glow: rgba(234, 179, 8, 0.4);
+            
+            --alert-clear-bg: #f0fdf4;
+            --alert-clear-border: #86efac;
+            --alert-clear-text: #166534;
+            
+            --alert-warn-bg: #fffbeb;
+            --alert-warn-border: #fde047;
+            --alert-warn-text: #b45309;
+            
+            --alert-danger-bg: #fef2f2;
+            --alert-danger-border: #fca5a5;
+            --alert-danger-text: #b91c1c;
+            
+            --shadow-card: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+            --shadow-scope: 0 10px 30px -5px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(15, 23, 42, 0.08);
+            --font-display: 'Orbitron', -apple-system, blinkmacsystemfont, 'Segoe UI', sans-serif;
+            --font-sub: 'Rajdhani', -apple-system, blinkmacsystemfont, 'Segoe UI', sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', consolas, monospace;
+        }
+
+        [data-theme="dark"] {
+            --bg-base: #070c12;
+            --bg-card: #0d1520;
+            --bg-card-secondary: #121d2c;
+            --bg-header: #0a111a;
+            --border-color: #1a2c3f;
+            --border-focus: #00ff88;
+            --border-glow: rgba(0, 255, 136, 0.3);
+            
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-accent: #00ff88;
+            
+            --radar-bg: #03070b;
+            --radar-bezel: #0b131a;
+            --radar-ring: rgba(0, 255, 136, 0.25);
+            --radar-subring: rgba(0, 255, 136, 0.12);
+            --radar-axis: rgba(0, 255, 136, 0.2);
+            --radar-sweep: rgba(0, 255, 136, 0.35);
+            --radar-sweep-line: #00ff88;
+            --radar-sweep-glow: #00ff88;
+            --radar-label: #5cffb0;
+            
+            --status-online: #00ff88;
+            --status-online-glow: rgba(0, 255, 136, 0.5);
+            --status-offline: #ff334b;
+            --status-offline-glow: rgba(255, 51, 75, 0.5);
+            --status-demo: #ffcc00;
+            --status-demo-glow: rgba(255, 204, 0, 0.5);
+            
+            --alert-clear-bg: rgba(6, 78, 59, 0.25);
+            --alert-clear-border: #059669;
+            --alert-clear-text: #34d399;
+            
+            --alert-warn-bg: rgba(120, 53, 15, 0.3);
+            --alert-warn-border: #d97706;
+            --alert-warn-text: #fbbf24;
+            
+            --alert-danger-bg: rgba(127, 29, 29, 0.35);
+            --alert-danger-border: #dc2626;
+            --alert-danger-text: #f87171;
+            
+            --shadow-card: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+            --shadow-scope: 0 0 40px rgba(0, 255, 136, 0.12), 0 0 0 1px rgba(0, 255, 136, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-sub);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            letter-spacing: 0.5px;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: 
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.22;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            position: relative;
+            z-index: 10;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .radar-badge-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 0 14px rgba(14, 165, 233, 0.4);
+            flex-shrink: 0;
+        }
+
+        [data-theme="dark"] .radar-badge-icon {
+            background: linear-gradient(135deg, #059669, #00ff88);
+            box-shadow: 0 0 16px rgba(0, 255, 136, 0.4);
+            color: #03070b;
+        }
+
+        .brand-title-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .brand-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-tagline {
+            font-size: 13px;
+            font-family: var(--font-sub);
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .controls-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .telemetry-status-pill {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            background: var(--bg-card);
+            border: 1.5px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .status-light {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: var(--status-online);
+            box-shadow: 0 0 10px var(--status-online-glow);
+            animation: pulse-dot 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .clock-display {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 700;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .clock-display span {
+            color: var(--text-primary);
+            font-weight: 800;
+        }
+
+        .btn-ctrl {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: var(--font-sub);
+            font-size: 14px;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-card);
+            user-select: none;
+        }
+
+        .btn-ctrl:hover {
+            border-color: var(--border-focus);
+            transform: translateY(-1px);
+        }
+
+        .btn-ctrl:active {
+            transform: translateY(0);
+        }
+
+        .btn-ctrl.active-sim {
+            background: #fef08a;
+            color: #854d0e;
+            border-color: #eab308;
+            font-weight: 800;
+        }
+
+        [data-theme="dark"] .btn-ctrl.active-sim {
+            background: rgba(234, 179, 8, 0.2);
+            color: #fde047;
+            border-color: #facc15;
+        }
+
+        .dashboard-container {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(440px, 1.35fr) minmax(380px, 1.1fr);
+            gap: 24px;
+            padding: 24px;
+            max-width: 1580px;
+            width: 100%;
+            margin: 0 auto;
+            flex: 1;
+        }
+
+        .radar-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-card);
+            position: relative;
+        }
+
+        .scope-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .scope-header-title {
+            font-family: var(--font-display);
+            font-size: 15px;
+            letter-spacing: 2px;
+            font-weight: 800;
+            color: var(--text-accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scope-telemetry-meta {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 16px;
+        }
+
+        .radar-canvas-wrap {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            padding: 12px;
+            background: radial-gradient(circle, var(--radar-bezel) 65%, transparent 100%);
+            box-shadow: var(--shadow-scope);
+            margin: 8px 0 16px 0;
+        }
+
+        canvas#radarCanvas {
+            display: block;
+            border-radius: 50%;
+            background-color: var(--radar-bg);
+            cursor: crosshair;
+        }
+
+        .scope-overlay-badge {
+            position: absolute;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 800;
+            background: rgba(7, 16, 24, 0.88);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            padding: 4px 10px;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+        }
+
+        [data-theme="dark"] .scope-overlay-badge {
+            color: #00ff88;
+            border-color: rgba(0, 255, 136, 0.4);
+        }
+
+        .badge-sweep {
+            top: 24px;
+            left: 24px;
+        }
+
+        .badge-range {
+            bottom: 24px;
+            right: 24px;
+        }
+
+        .heat-legend-container {
+            width: 100%;
+            max-width: 520px;
+            background: var(--bg-card-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .legend-title-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .heat-gradient-bar {
+            width: 100%;
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(
+                90deg,
+                rgb(46, 16, 101) 0%,
+                rgb(30, 58, 138) 18%,
+                rgb(8, 145, 178) 36%,
+                rgb(22, 163, 74) 52%,
+                rgb(234, 179, 8) 68%,
+                rgb(249, 115, 22) 84%,
+                rgb(220, 38, 38) 100%
+            );
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .heat-ticks {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .telemetry-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .threat-banner {
+            border-radius: 14px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid var(--alert-clear-border);
+            background: var(--alert-clear-bg);
+            color: var(--alert-clear-text);
+            box-shadow: var(--shadow-card);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .threat-text-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .threat-label {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .threat-title {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .threat-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.5);
+            font-size: 26px;
+        }
+
+        .threat-banner.threat-drone {
+            background: var(--alert-danger-bg);
+            border-color: var(--alert-danger-border);
+            color: var(--alert-danger-text);
+            box-shadow: 0 0 24px rgba(220, 38, 38, 0.35);
+            animation: alert-flash 1.2s infinite alternate;
+        }
+
+        @keyframes alert-flash {
+            0% { transform: scale(1); box-shadow: 0 0 15px rgba(220, 38, 38, 0.3); }
+            100% { transform: scale(1.01); box-shadow: 0 0 28px rgba(220, 38, 38, 0.6); }
+        }
+
+        .threat-banner.threat-human {
+            background: var(--alert-warn-bg);
+            border-color: var(--alert-warn-border);
+            color: var(--alert-warn-text);
+            box-shadow: 0 0 18px rgba(234, 179, 8, 0.25);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: var(--shadow-card);
+            position: relative;
+            overflow: hidden;
+            min-height: 140px;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--border-color);
+        }
+
+        .metric-card.accent-blue::before { background: #0284c7; }
+        .metric-card.accent-emerald::before { background: #10b981; }
+        .metric-card.accent-amber::before { background: #f59e0b; }
+        .metric-card.accent-purple::before { background: #8b5cf6; }
+
+        .metric-header {
+            font-size: 13.5px;
+            font-family: var(--font-mono);
+            font-weight: 800;
+            color: var(--text-secondary);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-value-wrap {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .metric-value {
+            font-family: var(--font-display);
+            font-size: 42px;
+            font-weight: 900;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+
+        .metric-unit {
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-muted);
+        }
+
+        .metric-bar-bg {
+            width: 100%;
+            height: 7px;
+            background: var(--bg-card-secondary);
+            border-radius: 4px;
+            margin-top: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            background: #0284c7;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.35s ease;
+        }
+
+        [data-theme="dark"] .metric-bar-fill {
+            background: #00ff88;
+        }
+
+        .spectrum-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px 22px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .spectrum-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .spectrum-title-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .spectrum-title {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+            text-transform: uppercase;
+        }
+
+        .spectrum-subtitle {
+            font-family: var(--font-sub);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .spectrum-badge {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-accent);
+            background: var(--bg-card-secondary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .spectrum-bars-wrap {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 86px;
+            padding: 6px 0;
+            border-bottom: 1.5px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 4px 4px 0 0;
+        }
+
+        .spec-bar {
+            flex: 1;
+            background: var(--bg-card-secondary);
+            height: 5%;
+            min-height: 4px;
+            border-radius: 2px 2px 0 0;
+            transition: height 0.25s ease, background-color 0.25s ease;
+            position: relative;
+        }
+
+        .spec-bar:hover {
+            filter: brightness(1.3);
+            cursor: pointer;
+        }
+
+        .spectrum-labels {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .spectrum-guide {
+            margin-top: 6px;
+            font-size: 11.5px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .targets-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px 22px;
+            box-shadow: var(--shadow-card);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 250px;
+        }
+
+        .targets-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .targets-card-title {
+            font-family: var(--font-mono);
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+            text-transform: uppercase;
+        }
+
+        .targets-count-badge {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 800;
+            background: var(--bg-card-secondary);
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: var(--text-secondary);
+        }
+
+        .targets-table-container {
+            overflow-y: auto;
+            max-height: 250px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-card-secondary);
+        }
+
+        .targets-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .targets-table th {
+            background: var(--bg-header);
+            color: var(--text-secondary);
+            font-weight: 800;
+            padding: 12px 14px;
+            position: sticky;
+            top: 0;
+            border-bottom: 1.5px solid var(--border-color);
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .targets-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .targets-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .targets-table tr:hover td {
+            background: rgba(14, 165, 233, 0.08);
+        }
+
+        .tag-threat {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .tag-drone { background: rgba(220, 38, 38, 0.2); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.4); }
+        .tag-human { background: rgba(234, 179, 8, 0.2); color: #d97706; border: 1px solid rgba(234, 179, 8, 0.4); }
+        .tag-signal { background: rgba(14, 165, 233, 0.2); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.4); }
+
+        .empty-targets-state {
+            padding: 32px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-family: var(--font-mono);
+        }
+
+        footer {
+            position: relative;
+            z-index: 10;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-header);
+            padding: 14px 28px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .footer-specs {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-specs span strong {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 1180px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            .radar-card {
+                padding: 18px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            header {
+                padding: 12px 16px;
+            }
+            .dashboard-container {
+                padding: 12px;
+                gap: 16px;
+            }
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            .brand-title {
+                font-size: 20px;
+            }
+            .metric-value {
+                font-size: 34px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<header>
-
-    <div class="title">
-        ESP32 DRONE DETECTION RADAR
-    </div>
-
-    <div class="status-box">
-
-        <div class="status-dot"></div>
-
-        <span id="connectionStatus">
-            CONNECTING...
-        </span>
-
-    </div>
-
-</header>
-
-
-<div class="dashboard">
-
-    <div class="radar-panel">
-
-        <div class="radar-stack">
-
-            <canvas id="radarCanvas"></canvas>
-
-            <div class="heat-legend">
-                <span>LOW</span>
-                <div class="heat-legend-bar"></div>
-                <span>HIGH</span>
+    <header>
+        <div class="brand-group">
+            <div class="radar-badge-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
+                    <path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"></path>
+                    <line x1="12" y1="2" x2="12" y2="12"></line>
+                </svg>
             </div>
-
+            <div class="brand-title-wrap">
+                <div class="brand-title">
+                    K.R.A.M.
+                </div>
+                <div class="brand-tagline">
+                    Kinematic Radar and Activity Monitor
+                </div>
+            </div>
         </div>
 
-    </div>
-
-
-    <div class="info-panel">
-
-        <div id="detectionStatus"
-             class="detection-status not-detected">
-
-            NO TARGET
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-title">
-                MAX SIGNAL INTENSITY
+        <div class="controls-group">
+            <div class="telemetry-status-pill">
+                <div id="statusDot" class="status-light"></div>
+                <span id="connectionStatus">INITIALIZING...</span>
             </div>
 
-            <span id="intensityValue" class="value">
-                0
-            </span>
-
-            <span class="unit">%</span>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-title">
-                AVERAGE DOPPLER FREQUENCY
+            <div class="clock-display" title="Synchronized Indian Standard Time (IST)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span id="missionClock">--:--:-- AM IST</span>
             </div>
 
-            <span id="frequencyValue" class="value">
-                0
-            </span>
+            <button id="simToggleBtn" class="btn-ctrl" title="Switch to simulation demo mode without ESP32 hardware">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span id="simBtnLabel">DEMO SIM: OFF</span>
+            </button>
 
-            <span class="unit">Hz</span>
+            <button id="audioToggleBtn" class="btn-ctrl" title="Toggle tactical radar ping and intrusion siren sounds">
+                <svg id="audioIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                <span id="audioBtnLabel">AUDIO: OFF</span>
+            </button>
 
+            <button id="themeToggleBtn" class="btn-ctrl" title="Switch between Aviation Day (Light) and Stealth Night (Dark)">
+                <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <span id="themeBtnLabel">DARK MODE</span>
+            </button>
+
+            <button id="downloadFileBtn" class="btn-ctrl" title="Download standalone K.R.A.M. radar HTML file">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>DOWNLOAD FILE</span>
+            </button>
         </div>
+    </header>
 
+    <main class="dashboard-container">
 
-        <div class="card">
-
-            <div class="card-title">
-                ESTIMATED TARGET SPEED
+        <section class="radar-card">
+            <div class="scope-header">
+                <div class="scope-header-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line></svg>
+                    PPI RADAR SCOPE • 360° PLAN POSITION INDICATOR
+                </div>
+                <div class="scope-telemetry-meta">
+                    <span>RES: <strong>10°/SECTOR</strong></span>
+                    <span>SWEEP: <strong id="sweepRpmText">24 RPM</strong></span>
+                    <span>BEARING: <strong id="currentSweepAngleText">000°</strong></span>
+                </div>
             </div>
 
-            <span id="speedValue" class="value">
-                0.0
-            </span>
-
-            <span class="unit">km/h</span>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-title">
-                STRONGEST DETECTION ANGLE
+            <div class="radar-canvas-wrap">
+                <canvas id="radarCanvas"></canvas>
+                <div class="scope-overlay-badge badge-sweep" id="scopeSweepBadge">SWEEP: 000°</div>
+                <div class="scope-overlay-badge badge-range" id="scopeTargetsBadge">TARGETS: 0</div>
             </div>
 
-            <span id="angleValue" class="value">
-                0
-            </span>
+            <div class="heat-legend-container">
+                <div class="legend-title-row">
+                    <span>RF Signal Return Intensity</span>
+                    <span>Threshold: 18%</span>
+                </div>
+                <div class="heat-gradient-bar"></div>
+                <div class="heat-ticks">
+                    <span>0% (NOISE)</span>
+                    <span>25%</span>
+                    <span>50% (MODERATE)</span>
+                    <span>75%</span>
+                    <span>100% (CRITICAL)</span>
+                </div>
+            </div>
+        </section>
 
-            <span class="unit">°</span>
+        <section class="telemetry-column">
 
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-title">
-                ACTIVE SECTORS
+            <div id="threatBanner" class="threat-banner">
+                <div class="threat-text-group">
+                    <div class="threat-label">TARGET CLASSIFICATION STATUS</div>
+                    <div id="threatStatusText" class="threat-title">NO TARGET • CLEAR SKY</div>
+                </div>
+                <div id="threatIconBox" class="threat-icon-box">
+                    🛡️
+                </div>
             </div>
 
-            <span id="activeValue" class="value">
-                0
-            </span>
+            <div class="metrics-grid">
+                
+                <div class="metric-card accent-blue">
+                    <div class="metric-header">
+                        <span>MAX SIGNAL INTENSITY</span>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                    </div>
+                    <div class="metric-value-wrap">
+                        <span id="intensityValue" class="metric-value">0</span>
+                        <span class="metric-unit">%</span>
+                    </div>
+                    <div class="metric-bar-bg">
+                        <div id="intensityBarFill" class="metric-bar-fill"></div>
+                    </div>
+                </div>
 
-            <span class="unit">/ 36</span>
+                <div class="metric-card accent-emerald">
+                    <div class="metric-header">
+                        <span>ESTIMATED SPEED</span>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                    </div>
+                    <div class="metric-value-wrap">
+                        <span id="speedValue" class="metric-value">0.0</span>
+                        <span class="metric-unit">km/h</span>
+                    </div>
+                    <div class="metric-bar-bg">
+                        <div id="speedBarFill" class="metric-bar-fill"></div>
+                    </div>
+                </div>
 
-        </div>
+                <div class="metric-card accent-purple">
+                    <div class="metric-header">
+                        <span>DOPPLER FREQUENCY</span>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12h20M7 8h10M10 4h4M7 16h10M10 20h4"></path></svg>
+                    </div>
+                    <div class="metric-value-wrap">
+                        <span id="frequencyValue" class="metric-value">0.0</span>
+                        <span class="metric-unit">Hz</span>
+                    </div>
+                    <div class="metric-bar-bg">
+                        <div id="freqBarFill" class="metric-bar-fill"></div>
+                    </div>
+                </div>
 
+                <div class="metric-card accent-amber">
+                    <div class="metric-header">
+                        <span>STRONGEST DETECTION ANGLE</span>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polygon points="12 2 15 9 12 7 9 9 12 2"></polygon></svg>
+                    </div>
+                    <div class="metric-value-wrap">
+                        <span id="angleValue" class="metric-value">0</span>
+                        <span class="metric-unit">°</span>
+                    </div>
+                    <div class="metric-bar-bg">
+                        <div id="angleBarFill" class="metric-bar-fill"></div>
+                    </div>
+                </div>
 
-        <div class="card">
-
-            <div class="card-title">
-                DETECTED SECTORS
             </div>
 
-            <div id="targetList" class="target-list">
-                Waiting for ThingSpeak data...
+            <div class="spectrum-card">
+                <div class="spectrum-header">
+                    <div class="spectrum-title-wrap">
+                        <span class="spectrum-title">360° Direction Scanner (All Directions)</span>
+                        <span class="spectrum-subtitle">Signal strength detected around the radar in each 10° direction</span>
+                    </div>
+                    <span id="activeSectorsCount" class="spectrum-badge">0 / 36 ACTIVE</span>
+                </div>
+                <div id="spectrumBarsWrap" class="spectrum-bars-wrap"></div>
+                <div class="spectrum-labels">
+                    <span>000° (NORTH)</span>
+                    <span>090° (EAST)</span>
+                    <span>180° (SOUTH)</span>
+                    <span>270° (WEST)</span>
+                    <span>350°</span>
+                </div>
+                <div class="spectrum-guide">
+                    <span>Low Signal</span>
+                    <span>Taller colored bars indicate detected targets</span>
+                    <span>High Signal</span>
+                </div>
             </div>
 
+            <div class="targets-card">
+                <div class="targets-card-header">
+                    <span class="targets-card-title">DETECTED TARGET LOG</span>
+                    <span id="targetListCountBadge" class="targets-count-badge">0 CONTACTS</span>
+                </div>
+                <div class="targets-table-container">
+                    <table class="targets-table">
+                        <thead>
+                            <tr>
+                                <th>SECTOR</th>
+                                <th>ANGLE</th>
+                                <th>INTENSITY</th>
+                                <th>CLASSIFICATION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="targetTableBody">
+                            <tr>
+                                <td colspan="4" class="empty-targets-state">
+                                    No active RF targets detected above threshold.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <div>
+            K.R.A.M. TELEMETRY • CHANNEL ID: <strong>3465056</strong>
         </div>
-
-    </div>
-
-</div>
-
-
-<footer>
-
-    ESP32 • 360° RADAR • THINGSPEAK CLOUD MONITORING
-
-</footer>
-
-
-<script>
-
-
-/* =========================================
-   THINGSPEAK CONFIGURATION
-========================================= */
-
-const CHANNEL_ID = 3465056;
-
-
-/* PUT YOUR READ API KEY HERE */
-
-const READ_API_KEY = "ZM8Z9F6ZBC9OY5V0";
-
-
-/*
-Field 1 = CSV of 36 intensities
-
-Field 2 = Average frequency
-*/
-
-const UPDATE_INTERVAL = 2000;
-
-
-/* =========================================
-   RADAR SETTINGS
-========================================= */
-
-const NUM_SECTORS = 36;
-
-const STEP_ANGLE = 10;
-
-const DETECTION_THRESHOLD = 18;
-
-
-/* =========================================
-   JET-STYLE HEAT COLOR SCALE
-   (purple -> blue -> cyan -> green -> yellow -> orange -> red)
-========================================= */
-
-const HEAT_STOPS = [
-    { p: 0.00, c: [46, 16, 101] },
-    { p: 0.18, c: [30, 58, 138] },
-    { p: 0.36, c: [8, 145, 178] },
-    { p: 0.52, c: [22, 163, 74] },
-    { p: 0.68, c: [234, 179, 8] },
-    { p: 0.84, c: [249, 115, 22] },
-    { p: 1.00, c: [220, 38, 38] }
-];
-
-function intensityToColor(value) {
-
-    const t = Math.max(0, Math.min(1, value / 100));
-
-    let a = HEAT_STOPS[0];
-    let b = HEAT_STOPS[HEAT_STOPS.length - 1];
-
-    for (let i = 0; i < HEAT_STOPS.length - 1; i++) {
-        if (t >= HEAT_STOPS[i].p && t <= HEAT_STOPS[i + 1].p) {
-            a = HEAT_STOPS[i];
-            b = HEAT_STOPS[i + 1];
-            break;
-        }
-    }
-
-    const span = (b.p - a.p) || 1;
-    const lt = (t - a.p) / span;
-
-    const r = Math.round(a.c[0] + (b.c[0] - a.c[0]) * lt);
-    const g = Math.round(a.c[1] + (b.c[1] - a.c[1]) * lt);
-    const bch = Math.round(a.c[2] + (b.c[2] - a.c[2]) * lt);
-
-    return `rgb(${r}, ${g}, ${bch})`;
-}
-
-
-/* =========================================
-   CANVAS
-========================================= */
-
-const canvas =
-    document.getElementById("radarCanvas");
-
-const ctx =
-    canvas.getContext("2d");
-
-
-let centerX;
-
-let centerY;
-
-let radarRadius;
-
-
-/* Smooth rotating sweep */
-
-let sweepAngle = 0;
-
-
-/*
-36 intensity values received
-from ThingSpeak
-*/
-
-let sectorIntensity =
-    new Array(NUM_SECTORS).fill(0);
-
-
-/* Average frequency */
-
-let averageFrequency = 0;
-
-/* =========================================
-   ML TELEMETRY (Field 3 + Field 4)
-========================================= */
-
-let targetClass = 0; // 0 = Clear, 1 = Human, 2 = Drone
-let targetSpeed = 0.0;
-
-// Last ThingSpeak entry ID
-let lastEntryID = null;
-
-// Time when we last received NEW data
-let lastNewDataTime = null;
-
-// ESP32 is considered offline if
-// no new data arrives for 30 seconds
-const OFFLINE_TIMEOUT = 30000;
-
-
-/* =========================================
-   RESIZE CANVAS
-========================================= */
-
-function resizeCanvas() {
-
-    const size =
-        Math.min(
-            window.innerWidth * 0.75,
-            700
-        );
-
-    canvas.width = size;
-
-    canvas.height = size;
-
-    centerX =
-        canvas.width / 2;
-
-    centerY =
-        canvas.height / 2;
-
-    radarRadius =
-        canvas.width * 0.40;
-}
-
-
-window.addEventListener(
-    "resize",
-    resizeCanvas
-);
-
-
-resizeCanvas();
-
-
-/* =========================================
-   DRAW RADAR
-========================================= */
-
-function drawRadar() {
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    /* Background */
-
-    ctx.fillStyle = "#020807";
-
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    /* =====================================
-       TARGET POINTS
-       Each active sector becomes ONE glowing
-       point, not a filled wedge.
-
-       Angle  = sector direction (bearing)
-       Radius = distance from center, derived
-                from signal intensity (stronger
-                signal placed closer in, as an
-                approximation of range -- swap
-                in a real distance sensor's
-                value here later if you add one)
-    ===================================== */
-
-    const minRadius = radarRadius * 0.08;
-    const maxRadius = radarRadius * 0.95;
-
-    for (let i = 0; i < NUM_SECTORS; i++) {
-
-        const intensity = sectorIntensity[i];
-
-        if (intensity < DETECTION_THRESHOLD) {
-            continue;
-        }
-
-        const centerAngle =
-            (i * STEP_ANGLE + STEP_ANGLE / 2 - 90) * Math.PI / 180;
-
-        const pointRadius =
-            minRadius + (1 - intensity / 100) * (maxRadius - minRadius);
-
-        const px = centerX + pointRadius * Math.cos(centerAngle);
-        const py = centerY + pointRadius * Math.sin(centerAngle);
-
-        const blobSize = 18 + (intensity / 100) * 34;
-
-        const color = intensityToColor(intensity);
-        const rgbNums = color.slice(4, -1);
-
-        const gradient = ctx.createRadialGradient(px, py, 0, px, py, blobSize);
-        gradient.addColorStop(0, `rgba(${rgbNums}, 0.95)`);
-        gradient.addColorStop(0.5, `rgba(${rgbNums}, 0.45)`);
-        gradient.addColorStop(1, `rgba(${rgbNums}, 0)`);
-
-        ctx.beginPath();
-        ctx.arc(px, py, blobSize, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(px, py, 3, 0, Math.PI * 2);
-        ctx.fillStyle = "#ffffff";
-        ctx.fill();
-    }
-
-
-    /* =====================================
-       RANGE RINGS
-    ===================================== */
-
-    for (
-        let i = 1;
-        i <= 5;
-        i++
-    ) {
-
-        const radius =
-            radarRadius * i / 5;
-
-
-        ctx.beginPath();
-
-        ctx.arc(
-            centerX,
-            centerY,
-            radius,
-            0,
-            Math.PI * 2
-        );
-
-
-        ctx.strokeStyle =
-            "rgba(0,255,130,0.25)";
-
-        ctx.lineWidth = 1;
-
-        ctx.stroke();
-
-    }
-
-
-    /* =====================================
-       ANGLE LINES
-    ===================================== */
-
-    for (
-        let angle = 0;
-        angle < 360;
-        angle += 30
-    ) {
-
-        const rad =
-            (angle - 90)
-            *
-            Math.PI / 180;
-
-
-        const x =
-            centerX +
-            radarRadius *
-            Math.cos(rad);
-
-
-        const y =
-            centerY +
-            radarRadius *
-            Math.sin(rad);
-
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            centerX,
-            centerY
-        );
-
-        ctx.lineTo(
-            x,
-            y
-        );
-
-        ctx.strokeStyle =
-            "rgba(0,255,130,0.15)";
-
-        ctx.stroke();
-
-
-        /* Angle labels */
-
-        const labelRadius =
-            radarRadius + 25;
-
-
-        const labelX =
-            centerX +
-            labelRadius *
-            Math.cos(rad);
-
-
-        const labelY =
-            centerY +
-            labelRadius *
-            Math.sin(rad);
-
-
-        ctx.fillStyle =
-            "rgba(120,255,180,0.75)";
-
-        ctx.font =
-            "12px Arial";
-
-        ctx.textAlign =
-            "center";
-
-
-        ctx.fillText(
-            angle + "°",
-            labelX,
-            labelY
-        );
-
-    }
-
-
-    /* =====================================
-       RADAR SWEEP TRAIL
-    ===================================== */
-
-    const trailLength = 55;
-
-
-    for (
-        let i = trailLength;
-        i > 0;
-        i--
-    ) {
-
-        const currentAngle =
-            sweepAngle - i;
-
-
-        const currentRad =
-            (currentAngle - 90)
-            *
-            Math.PI / 180;
-
-
-        const nextRad =
-            (currentAngle + 1 - 90)
-            *
-            Math.PI / 180;
-
-
-        const alpha =
-            (trailLength - i)
-            /
-            trailLength
-            *
-            0.15;
-
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            centerX,
-            centerY
-        );
-
-
-        ctx.arc(
-            centerX,
-            centerY,
-            radarRadius,
-            currentRad,
-            nextRad
-        );
-
-
-        ctx.closePath();
-
-
-        ctx.fillStyle =
-            "rgba(0,255,120," +
-            alpha +
-            ")";
-
-
-        ctx.fill();
-
-    }
-
-
-    /* =====================================
-       MAIN SWEEP LINE
-    ===================================== */
-
-    const sweepRad =
-        (sweepAngle - 90)
-        *
-        Math.PI / 180;
-
-
-    const sweepX =
-        centerX +
-        radarRadius *
-        Math.cos(sweepRad);
-
-
-    const sweepY =
-        centerY +
-        radarRadius *
-        Math.sin(sweepRad);
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        centerX,
-        centerY
-    );
-
-    ctx.lineTo(
-        sweepX,
-        sweepY
-    );
-
-
-    ctx.strokeStyle =
-        "#5cffaa";
-
-    ctx.shadowColor =
-        "#00ff66";
-
-    ctx.shadowBlur =
-        15;
-
-    ctx.lineWidth = 2;
-
-    ctx.stroke();
-
-    ctx.shadowBlur = 0;
-
-
-    /* =====================================
-       CENTER POINT
-    ===================================== */
-
-    ctx.beginPath();
-
-    ctx.arc(
-        centerX,
-        centerY,
-        7,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fillStyle =
-        "#00ff66";
-
-    ctx.fill();
-
-}
-
-
-/* =========================================
-   DRAW DETECTED TARGETS
-========================================= */
- function drawTargets() {
-
-    for (let i = 0; i < NUM_SECTORS; i++) {
-
-        const intensity =
-            sectorIntensity[i];
-
-        // Ignore background noise
-        if (intensity < DETECTION_THRESHOLD) {
-            continue;
-        }
-
-        const angle =
-            i * STEP_ANGLE;
-
-        const rad =
-            (angle - 90) *
-            Math.PI / 180;
-
-
-        // Normalize intensity
-        const normalized =
-            (intensity - DETECTION_THRESHOLD) /
-            (100 - DETECTION_THRESHOLD);
-
-
-        // Target distance from center
-        const targetRadius =
-            radarRadius *
-            (0.30 + normalized * 0.60);
-
-
-        const x =
-            centerX +
-            targetRadius *
-            Math.cos(rad);
-
-        const y =
-            centerY +
-            targetRadius *
-            Math.sin(rad);
-
-
-        const size =
-            5 + normalized * 8;
-
-
-        // ==================================
-        // HEAT MAP TARGET COLOR
-        // ==================================
-
-        let targetColor;
-        let glowColor;
-
-
-        if (intensity < 60) {
-
-            // BLUE
-            targetColor =
-                "rgba(0,150,255,1)";
-
-            glowColor =
-                "#0096ff";
-
-        }
-        else if (intensity < 80) {
-
-            // CYAN
-            targetColor =
-                "rgba(0,230,255,1)";
-
-            glowColor =
-                "#00e6ff";
-
-        }
-        else {
-
-            // ORANGE = STRONG TARGET
-            targetColor =
-                "rgba(255,130,0,1)";
-
-            glowColor =
-                "#ff8200";
-
-        }
-
-
-        // ==================================
-        // TARGET GLOW
-        // ==================================
-
-        ctx.shadowColor =
-            glowColor;
-
-        ctx.shadowBlur =
-            20;
-
-
-        // Target circle
-
-        ctx.beginPath();
-
-        ctx.arc(
-            x,
-            y,
-            size,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fillStyle =
-            targetColor;
-
-        ctx.fill();
-
-        ctx.shadowBlur = 0;
-
-
-        // ==================================
-        // TARGET CROSS
-        // ==================================
-
-        ctx.strokeStyle =
-            targetColor;
-
-        ctx.lineWidth = 1.5;
-
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            x - size * 2,
-            y
-        );
-
-        ctx.lineTo(
-            x + size * 2,
-            y
-        );
-
-
-        ctx.moveTo(
-            x,
-            y - size * 2
-        );
-
-        ctx.lineTo(
-            x,
-            y + size * 2
-        );
-
-        ctx.stroke();
-
-    }
-
-}
-
-
-/* =========================================
-   ANIMATION
-========================================= */
-
-function animateRadar() {
-
-    /*
-    Smooth continuous rotation
-    */
-
-    sweepAngle += 0.8;
-
-
-    if (
-        sweepAngle >= 360
-    ) {
-
-        sweepAngle = 0;
-
-    }
-
-
-    drawRadar();
-
-
-    requestAnimationFrame(
-        animateRadar
-    );
-
-}
-
-
-animateRadar();
-
-
-/* =========================================
-   FETCH THINGSPEAK DATA
-========================================= */
-
-async function fetchThingSpeakData() {
-
-    try {
-
-        document
-            .getElementById(
-                "connectionStatus"
-            )
-            .textContent =
-            "UPDATING...";
-
-
-        /*
-        Get latest channel entry
-        */
-
-        const url =
-            "https://api.thingspeak.com/channels/"
-            +
-            CHANNEL_ID
-            +
-            "/feeds.json?api_key="
-            +
-            READ_API_KEY
-            +
-            "&results=1";
-
-
-        const response =
-            await fetch(url);
-
-
-        if (
-            !response.ok
-        ) {
-
-            throw new Error(
-                "ThingSpeak request failed"
-            );
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !data.feeds ||
-            data.feeds.length === 0
-        ) {
-
-            throw new Error(
-                "No ThingSpeak data found"
-            );
-
-        }
-
-
-        /*
-        Get latest feed
-        */
-
-        const latestFeed =
-            data.feeds[
-                data.feeds.length - 1
-            ];
-// =====================================
-// CHECK IF NEW ESP32 DATA ARRIVED
-// =====================================
-
-const currentEntryID =
-    latestFeed.entry_id;
-
-
-// If this is a new ThingSpeak entry
-if (currentEntryID !== lastEntryID) {
-
-    lastEntryID =
-        currentEntryID;
-
-    lastNewDataTime =
-        Date.now();
-
-}
-
-
-        /*
-        FIELD 1
-
-        Example:
-
-        "10,45,90,12,..."
-        */
-
-        const intensityCSV =
-            latestFeed.field1;
-
-
-        /*
-        FIELD 2
-
-        Average frequency
-        */
-
-        const frequency =
-            parseFloat(
-                latestFeed.field2
-            );
-
-
-        /*
-        Convert CSV into array
-        */
-
-        if (
-            intensityCSV
-        ) {
-
-            const values =
-                intensityCSV
-                .split(",");
-
-
-            sectorIntensity =
-                values
-                .map(
-                    value =>
-                        parseFloat(
-                            value.trim()
-                        )
-                )
-                .filter(
-                    value =>
-                        !isNaN(value)
-                );
-
-
-            /*
-            Ensure exactly
-            36 sectors
-            */
-
-            while (
-                sectorIntensity.length
-                <
-                NUM_SECTORS
-            ) {
-
-                sectorIntensity.push(0);
-
+        <div class="footer-specs">
+            <span>POLL: <strong>1000ms</strong></span>
+            <span>GATE: <strong>≥ 18% SNR</strong></span>
+            <span>BAND: <strong>10.252 GHz CW DOPPLER</strong></span>
+        </div>
+    </footer>
+
+    <script>
+        const CHANNEL_ID = 3465056;
+        const READ_API_KEY = "ZM8Z9F6ZBC9OY5V0";
+        const UPDATE_INTERVAL = 1000;
+        const OFFLINE_TIMEOUT = 6000;
+
+        const NUM_SECTORS = 36;
+        const STEP_ANGLE = 10;
+        const DETECTION_THRESHOLD = 18;
+
+        let sectorIntensity = new Array(NUM_SECTORS).fill(0);
+        let averageFrequency = 0;
+        let targetClass = 0;
+        let targetSpeed = 0.0;
+        let lastEntryID = null;
+        let lastNewDataTime = null;
+
+        let isSimulationMode = false;
+        let simDroneAngle = 45;
+        let simDroneSpeed = 24.5;
+        let simDroneDirection = 1;
+
+        let audioEnabled = false;
+        let audioCtx = null;
+        let lastBeepSector = -1;
+
+        let sectorPhosphor = new Array(NUM_SECTORS).fill(0);
+
+        const HEAT_STOPS = [
+            { p: 0.00, c: [46, 16, 101] },
+            { p: 0.18, c: [30, 58, 138] },
+            { p: 0.36, c: [8, 145, 178] },
+            { p: 0.52, c: [22, 163, 74] },
+            { p: 0.68, c: [234, 179, 8] },
+            { p: 0.84, c: [249, 115, 22] },
+            { p: 1.00, c: [220, 38, 38] }
+        ];
+
+        function intensityToRgb(value) {
+            const t = Math.max(0, Math.min(1, value / 100));
+            let a = HEAT_STOPS[0];
+            let b = HEAT_STOPS[HEAT_STOPS.length - 1];
+
+            for (let i = 0; i < HEAT_STOPS.length - 1; i++) {
+                if (t >= HEAT_STOPS[i].p && t <= HEAT_STOPS[i + 1].p) {
+                    a = HEAT_STOPS[i];
+                    b = HEAT_STOPS[i + 1];
+                    break;
+                }
             }
 
+            const span = (b.p - a.p) || 1;
+            const lt = (t - a.p) / span;
 
-            sectorIntensity =
-                sectorIntensity.slice(
-                    0,
-                    NUM_SECTORS
-                );
+            const r = Math.round(a.c[0] + (b.c[0] - a.c[0]) * lt);
+            const g = Math.round(a.c[1] + (b.c[1] - a.c[1]) * lt);
+            const bch = Math.round(a.c[2] + (b.c[2] - a.c[2]) * lt);
 
+            return { r, g, b: bch, str: `rgb(${r}, ${g}, ${bch})` };
         }
 
+        const themeToggleBtn = document.getElementById("themeToggleBtn");
+        const themeBtnLabel = document.getElementById("themeBtnLabel");
+        const themeIcon = document.getElementById("themeIcon");
 
-        if (
-            !isNaN(frequency)
-        ) {
+        function applyTheme(theme) {
+            document.documentElement.setAttribute("data-theme", theme);
+            localStorage.setItem("radar_theme", theme);
 
-            averageFrequency =
-                frequency;
-
+            if (theme === "dark") {
+                themeBtnLabel.textContent = "LIGHT MODE";
+                themeIcon.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+            } else {
+                themeBtnLabel.textContent = "DARK MODE";
+                themeIcon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+            }
         }
 
+        const savedTheme = localStorage.getItem("radar_theme") || "light";
+        applyTheme(savedTheme);
 
-        /*
-        FIELD 3
+        themeToggleBtn.addEventListener("click", () => {
+            const current = document.documentElement.getAttribute("data-theme");
+            applyTheme(current === "light" ? "dark" : "light");
+        });
 
-        AI target classification
-        0 = Clear, 1 = Human, 2 = Drone
-        */
+        const audioToggleBtn = document.getElementById("audioToggleBtn");
+        const audioBtnLabel = document.getElementById("audioBtnLabel");
+        const audioIcon = document.getElementById("audioIcon");
 
-        targetClass =
-            parseInt(latestFeed.field3) || 0;
-
-
-        /*
-        FIELD 4
-
-        Estimated target speed (km/h)
-        */
-
-        targetSpeed =
-            parseFloat(latestFeed.field4) || 0.0;
-
-
-        updateDashboard();
-
-
-     // =====================================
-// CHECK ESP32 STATUS
-// =====================================
-
-const statusElement =
-    document.getElementById(
-        "connectionStatus"
-    );
-
-
-// If no new data has been received
-if (
-    lastNewDataTime !== null &&
-    Date.now() - lastNewDataTime > OFFLINE_TIMEOUT
-) {
-
-    statusElement.textContent =
-        "ESP32 OFFLINE";
-
-    document
-        .querySelector(".status-dot")
-        .style.background =
-        "#ff3333";
-
-    document
-        .querySelector(".status-dot")
-        .style.boxShadow =
-        "0 0 12px #ff3333";
-
-}
-else {
-
-    statusElement.textContent =
-        "SYSTEM ONLINE";
-
-    document
-        .querySelector(".status-dot")
-        .style.background =
-        "#00ff66";
-
-    document
-        .querySelector(".status-dot")
-        .style.boxShadow =
-        "0 0 12px #00ff66";
-
-}
-
-
-    }
-    catch (
-        error
-    ) {
-
-        console.error(error);
-
-
-        document
-            .getElementById(
-                "connectionStatus"
-            )
-            .textContent =
-            "CONNECTION ERROR";
-
-    }
-
-}
-
-
-/* =========================================
-   UPDATE DASHBOARD
-========================================= */
-
-function updateDashboard() {
-
-    let maxIntensity = 0;
-
-    let maxSector = 0;
-
-    let activeSectors = 0;
-
-
-    for (
-        let i = 0;
-        i < NUM_SECTORS;
-        i++
-    ) {
-
-        const intensity =
-            sectorIntensity[i];
-
-
-        if (
-            intensity >=
-            DETECTION_THRESHOLD
-        ) {
-
-            activeSectors++;
-
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
         }
 
+        audioToggleBtn.addEventListener("click", () => {
+            initAudio();
+            audioEnabled = !audioEnabled;
+            if (audioEnabled) {
+                audioBtnLabel.textContent = "AUDIO: ON";
+                audioToggleBtn.style.borderColor = "var(--border-focus)";
+                audioIcon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+                playSonarPing(880, 0.08);
+            } else {
+                audioBtnLabel.textContent = "AUDIO: OFF";
+                audioToggleBtn.style.borderColor = "var(--border-color)";
+                audioIcon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>`;
+            }
+        });
 
-        if (
-            intensity >
-            maxIntensity
-        ) {
+        function playSonarPing(freq = 880, duration = 0.08) {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.5, audioCtx.currentTime + duration);
 
-            maxIntensity =
-                intensity;
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
 
-            maxSector =
-                i;
-
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
         }
 
-    }
+        function playDroneAlert() {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = "sawtooth";
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(880, audioCtx.currentTime + 0.18);
 
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
 
-    const strongestAngle =
-        maxSector *
-        STEP_ANGLE;
-
-
-    /* Update values */
-
-    document
-        .getElementById(
-            "intensityValue"
-        )
-        .textContent =
-        maxIntensity.toFixed(0);
-
-
-    document
-        .getElementById(
-            "frequencyValue"
-        )
-        .textContent =
-        averageFrequency.toFixed(1);
-
-
-    document
-        .getElementById(
-            "speedValue"
-        )
-        .textContent =
-        targetSpeed.toFixed(1);
-
-
-    document
-        .getElementById(
-            "angleValue"
-        )
-        .textContent =
-        strongestAngle;
-
-
-    document
-        .getElementById(
-            "activeValue"
-        )
-        .textContent =
-        activeSectors;
-
-
-    /* Detection status */
-
-    const statusElement =
-        document.getElementById(
-            "detectionStatus"
-        );
-
-
-    if (
-        targetClass === 2
-    ) {
-
-        statusElement.textContent =
-            "ALERT: DRONE DETECTED";
-
-        statusElement.className =
-            "detection-status detected";
-
-        statusElement.style.color =
-            "#ff3333";
-
-        statusElement.style.borderColor =
-            "#ff3333";
-
-        statusElement.style.boxShadow =
-            "0 0 15px rgba(255, 51, 51, 0.4)";
-
-    }
-    else if (
-        targetClass === 1
-    ) {
-
-        statusElement.textContent =
-            "TARGET DETECTED: HUMAN";
-
-        statusElement.className =
-            "detection-status detected";
-
-        statusElement.style.color =
-            "#ffbb00";
-
-        statusElement.style.borderColor =
-            "#ffbb00";
-
-        statusElement.style.boxShadow =
-            "0 0 15px rgba(255, 187, 0, 0.4)";
-
-    }
-    else {
-
-        statusElement.textContent =
-            "NO TARGET / CLEAR";
-
-        statusElement.className =
-            "detection-status not-detected";
-
-        statusElement.style.color =
-            "#888";
-
-        statusElement.style.borderColor =
-            "#176b4c";
-
-        statusElement.style.boxShadow =
-            "none";
-
-    }
-
-
-    /* Detected sector list */
-
-    const list =
-        document.getElementById(
-            "targetList"
-        );
-
-
-    list.innerHTML = "";
-
-
-    let detectionFound =
-        false;
-
-
-    for (
-        let i = 0;
-        i < NUM_SECTORS;
-        i++
-    ) {
-
-        const intensity =
-            sectorIntensity[i];
-
-
-        if (
-            intensity >=
-            DETECTION_THRESHOLD
-        ) {
-
-            detectionFound =
-                true;
-
-
-            const item =
-                document.createElement(
-                    "div"
-                );
-
-
-            item.className =
-                "target-item";
-
-
-            item.innerHTML =
-                "SECTOR: "
-                +
-                (i * STEP_ANGLE)
-                +
-                "°"
-                +
-                "<br>"
-                +
-                "INTENSITY: "
-                +
-                intensity.toFixed(0)
-                +
-                "%";
-
-
-            list.appendChild(
-                item
-            );
-
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } catch (e) {}
         }
 
-    }
+        const simToggleBtn = document.getElementById("simToggleBtn");
+        const simBtnLabel = document.getElementById("simBtnLabel");
 
+        simToggleBtn.addEventListener("click", () => {
+            isSimulationMode = !isSimulationMode;
+            if (isSimulationMode) {
+                simToggleBtn.classList.add("active-sim");
+                simBtnLabel.textContent = "DEMO SIM: ON";
+                document.getElementById("connectionStatus").textContent = "DEMO SIMULATION";
+                document.getElementById("statusDot").style.background = "var(--status-demo)";
+                document.getElementById("statusDot").style.boxShadow = "0 0 12px var(--status-demo-glow)";
+            } else {
+                simToggleBtn.classList.remove("active-sim");
+                simBtnLabel.textContent = "DEMO SIM: OFF";
+                fetchThingSpeakData();
+            }
+        });
 
-    if (
-        !detectionFound
-    ) {
+        function updateSimulationData() {
+            if (!isSimulationMode) return;
 
-        list.textContent =
-            "No targets detected";
+            simDroneAngle = (simDroneAngle + 4 * simDroneDirection) % 360;
+            if (simDroneAngle < 0) simDroneAngle += 360;
 
-    }
+            const droneSector = Math.floor(simDroneAngle / STEP_ANGLE);
 
-}
+            for (let i = 0; i < NUM_SECTORS; i++) {
+                const dist = Math.min(Math.abs(i - droneSector), NUM_SECTORS - Math.abs(i - droneSector));
+                if (dist === 0) {
+                    sectorIntensity[i] = 88 + Math.floor(Math.random() * 10);
+                } else if (dist === 1) {
+                    sectorIntensity[i] = 48 + Math.floor(Math.random() * 15);
+                } else if (dist === 2) {
+                    sectorIntensity[i] = 22 + Math.floor(Math.random() * 8);
+                } else {
+                    sectorIntensity[i] = Math.floor(Math.random() * 8);
+                }
+            }
 
+            averageFrequency = 184.2 + (Math.random() * 20 - 10);
+            targetClass = 2;
+            targetSpeed = 32.4 + (Math.random() * 4 - 2);
 
-/* =========================================
-   START SYSTEM
-========================================= */
+            updateDashboard();
+        }
 
+        const spectrumBarsWrap = document.getElementById("spectrumBarsWrap");
+        const specBars = [];
 
-/* Get data immediately */
+        for (let i = 0; i < NUM_SECTORS; i++) {
+            const bar = document.createElement("div");
+            bar.className = "spec-bar";
+            bar.title = `Direction: ${i * STEP_ANGLE}°`;
+            spectrumBarsWrap.appendChild(bar);
+            specBars.push(bar);
+        }
 
-fetchThingSpeakData();
-function checkOfflineStatus() {
+        function updateSpectrumVisualizer() {
+            for (let i = 0; i < NUM_SECTORS; i++) {
+                const intensity = sectorIntensity[i];
+                const heightPercent = Math.max(5, Math.min(100, intensity));
+                specBars[i].style.height = `${heightPercent}%`;
+                
+                if (intensity >= DETECTION_THRESHOLD) {
+                    const col = intensityToRgb(intensity);
+                    specBars[i].style.backgroundColor = col.str;
+                } else {
+                    specBars[i].style.backgroundColor = "var(--bg-card-secondary)";
+                }
+            }
+        }
 
-    if (
-        lastNewDataTime !== null &&
-        Date.now() - lastNewDataTime > OFFLINE_TIMEOUT
-    ) {
+        const canvas = document.getElementById("radarCanvas");
+        const ctx = canvas.getContext("2d");
 
-        document
-            .getElementById(
-                "connectionStatus"
-            )
-            .textContent =
-            "ESP32 OFFLINE";
+        let centerX, centerY, radarRadius;
+        let sweepAngle = 0;
+        let lastFrameTime = performance.now();
 
+        function resizeCanvas() {
+            const containerWidth = Math.min(window.innerWidth * 0.9, 620);
+            const size = Math.max(340, containerWidth);
 
-        document
-            .querySelector(".status-dot")
-            .style.background =
-            "#ff3333";
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            canvas.style.width = `${size}px`;
+            canvas.style.height = `${size}px`;
 
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        document
-            .querySelector(".status-dot")
-            .style.boxShadow =
-            "0 0 12px #ff3333";
+            centerX = size / 2;
+            centerY = size / 2;
+            radarRadius = size * 0.40;
+        }
 
-    }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
 
-}
-setInterval(
-    checkOfflineStatus,
-    1000
-);
+        function drawRadarScope() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
 
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = isDark ? "#04080c" : "#07111a";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-/* Refresh data */
+            const bgGlow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radarRadius);
+            bgGlow.addColorStop(0, isDark ? "rgba(0, 255, 136, 0.04)" : "rgba(14, 165, 233, 0.05)");
+            bgGlow.addColorStop(1, "transparent");
+            ctx.fillStyle = bgGlow;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radarRadius, 0, Math.PI * 2);
+            ctx.fill();
 
-setInterval(
-    fetchThingSpeakData,
-    UPDATE_INTERVAL
-);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radarRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = isDark ? "rgba(0, 255, 136, 0.45)" : "rgba(14, 165, 233, 0.55)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
 
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radarRadius + 8, 0, Math.PI * 2);
+            ctx.strokeStyle = isDark ? "rgba(0, 255, 136, 0.15)" : "rgba(14, 165, 233, 0.2)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
 
-</script>
+            const ringColor = isDark ? "rgba(0, 255, 136, 0.18)" : "rgba(14, 165, 233, 0.25)";
+            const ringLabels = ["20%", "40%", "60%", "80%", "100%"];
 
+            for (let i = 1; i <= 5; i++) {
+                const r = (radarRadius * i) / 5;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+                ctx.strokeStyle = ringColor;
+                ctx.lineWidth = (i === 5) ? 1.5 : 1;
+                ctx.setLineDash(i % 2 === 0 ? [] : [4, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                if (i < 5) {
+                    ctx.fillStyle = isDark ? "rgba(0, 255, 136, 0.45)" : "rgba(56, 189, 248, 0.55)";
+                    ctx.font = "9px 'JetBrains Mono', monospace";
+                    ctx.textAlign = "left";
+                    ctx.fillText(ringLabels[i - 1], centerX + 4, centerY - r + 11);
+                }
+            }
+
+            const axisColor = isDark ? "rgba(0, 255, 136, 0.25)" : "rgba(14, 165, 233, 0.35)";
+
+            ctx.beginPath();
+            ctx.moveTo(centerX - radarRadius, centerY);
+            ctx.lineTo(centerX + radarRadius, centerY);
+            ctx.moveTo(centerX, centerY - radarRadius);
+            ctx.lineTo(centerX, centerY + radarRadius);
+            ctx.strokeStyle = axisColor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            for (let angle = 0; angle < 360; angle += 10) {
+                const rad = (angle - 90) * Math.PI / 180;
+                const isMajor = (angle % 30 === 0);
+                const isCardinal = (angle % 90 === 0);
+                const tickLen = isCardinal ? 12 : (isMajor ? 8 : 4);
+
+                const x1 = centerX + radarRadius * Math.cos(rad);
+                const y1 = centerY + radarRadius * Math.sin(rad);
+                const x2 = centerX + (radarRadius - tickLen) * Math.cos(rad);
+                const y2 = centerY + (radarRadius - tickLen) * Math.sin(rad);
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.strokeStyle = isMajor 
+                    ? (isDark ? "#00ff88" : "#38bdf8") 
+                    : (isDark ? "rgba(0, 255, 136, 0.3)" : "rgba(14, 165, 233, 0.35)");
+                ctx.lineWidth = isMajor ? 1.5 : 1;
+                ctx.stroke();
+
+                if (isMajor) {
+                    const labelRadius = radarRadius + 18;
+                    const lx = centerX + labelRadius * Math.cos(rad);
+                    const ly = centerY + labelRadius * Math.sin(rad);
+
+                    let labelText = `${angle}°`;
+                    if (angle === 0) labelText = "N 000°";
+                    if (angle === 90) labelText = "E 090°";
+                    if (angle === 180) labelText = "S 180°";
+                    if (angle === 270) labelText = "W 270°";
+
+                    ctx.fillStyle = isCardinal 
+                        ? (isDark ? "#00ff88" : "#38bdf8") 
+                        : (isDark ? "rgba(241, 245, 249, 0.75)" : "rgba(15, 23, 42, 0.8)");
+                    ctx.font = isCardinal ? "bold 10px 'JetBrains Mono', monospace" : "9px 'JetBrains Mono', monospace";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(labelText, lx, ly);
+                }
+            }
+
+            const minRadius = radarRadius * 0.12;
+            const maxRadius = radarRadius * 0.94;
+
+            for (let i = 0; i < NUM_SECTORS; i++) {
+                const intensity = sectorIntensity[i];
+                const phosphor = sectorPhosphor[i];
+
+                if (intensity < DETECTION_THRESHOLD && phosphor <= 0.05) {
+                    continue;
+                }
+
+                const centerAngle = (i * STEP_ANGLE + STEP_ANGLE / 2 - 90) * Math.PI / 180;
+                const pointRadius = minRadius + (1 - Math.min(100, intensity) / 100) * (maxRadius - minRadius);
+                const px = centerX + pointRadius * Math.cos(centerAngle);
+                const py = centerY + pointRadius * Math.sin(centerAngle);
+
+                const col = intensityToRgb(intensity > 0 ? intensity : 20);
+                const baseAlpha = Math.max(0.2, phosphor);
+
+                const blobSize = 12 + (intensity / 100) * 26;
+                const gradient = ctx.createRadialGradient(px, py, 0, px, py, blobSize);
+                gradient.addColorStop(0, `rgba(${col.r}, ${col.g}, ${col.b}, ${baseAlpha})`);
+                gradient.addColorStop(0.4, `rgba(${col.r}, ${col.g}, ${col.b}, ${baseAlpha * 0.5})`);
+                gradient.addColorStop(1, `rgba(${col.r}, ${col.g}, ${col.b}, 0)`);
+
+                ctx.beginPath();
+                ctx.arc(px, py, blobSize, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${baseAlpha})`;
+                ctx.fill();
+
+                if (intensity >= 45 && phosphor > 0.4) {
+                    ctx.strokeStyle = `rgba(${col.r}, ${col.g}, ${col.b}, ${phosphor})`;
+                    ctx.lineWidth = 1.2;
+                    const bSize = 8;
+
+                    ctx.beginPath();
+                    ctx.moveTo(px - bSize, py - bSize / 2);
+                    ctx.lineTo(px - bSize, py - bSize);
+                    ctx.lineTo(px - bSize / 2, py - bSize);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(px + bSize, py + bSize / 2);
+                    ctx.lineTo(px + bSize, py + bSize);
+                    ctx.lineTo(px + bSize / 2, py + bSize);
+                    ctx.stroke();
+
+                    ctx.fillStyle = isDark ? "#00ff88" : "#38bdf8";
+                    ctx.font = "8px 'JetBrains Mono', monospace";
+                    ctx.textAlign = "left";
+                    ctx.fillText(`TGT-${i.toString().padStart(2, '0')}`, px + 10, py - 4);
+                }
+            }
+
+            const trailLength = 55;
+            const sweepTrailColor = isDark ? "0, 255, 136" : "14, 165, 233";
+
+            for (let i = trailLength; i > 0; i--) {
+                const currentAngle = sweepAngle - i;
+                const currentRad = (currentAngle - 90) * Math.PI / 180;
+                const nextRad = (currentAngle + 1.2 - 90) * Math.PI / 180;
+                const alpha = ((trailLength - i) / trailLength) * 0.16;
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radarRadius, currentRad, nextRad);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(${sweepTrailColor}, ${alpha})`;
+                ctx.fill();
+            }
+
+            const sweepRad = (sweepAngle - 90) * Math.PI / 180;
+            const sweepX = centerX + radarRadius * Math.cos(sweepRad);
+            const sweepY = centerY + radarRadius * Math.sin(sweepRad);
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(sweepX, sweepY);
+            ctx.strokeStyle = isDark ? "#00ff88" : "#38bdf8";
+            ctx.shadowColor = isDark ? "#00ff88" : "#0284c7";
+            ctx.shadowBlur = 12;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = isDark ? "#00ff88" : "#0284c7";
+            ctx.shadowColor = isDark ? "#00ff88" : "#0ea5e9";
+            ctx.shadowBlur = 8;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        function animateRadar(currentTime) {
+            const dt = (currentTime - lastFrameTime) / 1000;
+            lastFrameTime = currentTime;
+
+            sweepAngle = (sweepAngle + 1.2) % 360;
+
+            const currentSector = Math.floor(sweepAngle / STEP_ANGLE) % NUM_SECTORS;
+            if (currentSector !== lastBeepSector) {
+                lastBeepSector = currentSector;
+
+                if (sectorIntensity[currentSector] >= DETECTION_THRESHOLD) {
+                    sectorPhosphor[currentSector] = 1.0;
+
+                    if (targetClass === 2) {
+                        playDroneAlert();
+                    } else {
+                        playSonarPing(920 + sectorIntensity[currentSector] * 4, 0.05);
+                    }
+                }
+            }
+
+            for (let i = 0; i < NUM_SECTORS; i++) {
+                if (sectorPhosphor[i] > 0) {
+                    sectorPhosphor[i] = Math.max(0, sectorPhosphor[i] - 0.008);
+                }
+            }
+
+            document.getElementById("currentSweepAngleText").textContent = `${Math.floor(sweepAngle).toString().padStart(3, '0')}°`;
+            document.getElementById("scopeSweepBadge").textContent = `SWEEP: ${Math.floor(sweepAngle).toString().padStart(3, '0')}°`;
+
+            drawRadarScope();
+            requestAnimationFrame(animateRadar);
+        }
+
+        requestAnimationFrame(animateRadar);
+
+        function updateMissionClock() {
+            const now = new Date();
+            const istTime = now.toLocaleTimeString('en-US', {
+                timeZone: 'Asia/Kolkata',
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById("missionClock").textContent = istTime + " IST";
+        }
+        setInterval(updateMissionClock, 1000);
+        updateMissionClock();
+
+        function setHardwareStatus(isOnline, customLabel = null) {
+            if (isSimulationMode) return;
+            const statusDot = document.getElementById("statusDot");
+            const connectionStatus = document.getElementById("connectionStatus");
+
+            if (customLabel) {
+                connectionStatus.textContent = customLabel;
+            } else {
+                connectionStatus.textContent = isOnline ? "ESP32 LIVE ONLINE" : "ESP32 OFFLINE";
+            }
+
+            if (isOnline) {
+                statusDot.style.background = "var(--status-online)";
+                statusDot.style.boxShadow = "0 0 12px var(--status-online-glow)";
+            } else {
+                statusDot.style.background = "var(--status-offline)";
+                statusDot.style.boxShadow = "0 0 12px var(--status-offline-glow)";
+            }
+        }
+
+        function checkOfflineWatchdog() {
+            if (isSimulationMode) return;
+            if (!lastNewDataTime || Date.now() - lastNewDataTime > OFFLINE_TIMEOUT) {
+                setHardwareStatus(false);
+            }
+        }
+        setInterval(checkOfflineWatchdog, 500);
+
+        async function fetchThingSpeakData() {
+            if (isSimulationMode) return;
+
+            try {
+                const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=1`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("ThingSpeak request failed");
+
+                const data = await response.json();
+                if (!data.feeds || data.feeds.length === 0) throw new Error("No feeds available");
+
+                const latestFeed = data.feeds[data.feeds.length - 1];
+                const feedTime = new Date(latestFeed.created_at).getTime();
+                const feedAgeMs = Date.now() - feedTime;
+
+                if (feedAgeMs > OFFLINE_TIMEOUT) {
+                    setHardwareStatus(false);
+                } else {
+                    if (latestFeed.entry_id !== lastEntryID) {
+                        lastEntryID = latestFeed.entry_id;
+                        lastNewDataTime = Date.now();
+                    }
+                    setHardwareStatus(true);
+                }
+
+                if (latestFeed.field1) {
+                    const values = latestFeed.field1.split(",").map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+                    while (values.length < NUM_SECTORS) values.push(0);
+                    sectorIntensity = values.slice(0, NUM_SECTORS);
+                }
+
+                if (latestFeed.field2) {
+                    const freq = parseFloat(latestFeed.field2);
+                    if (!isNaN(freq)) averageFrequency = freq;
+                }
+
+                targetClass = parseInt(latestFeed.field3) || 0;
+                targetSpeed = parseFloat(latestFeed.field4) || 0.0;
+
+                updateDashboard();
+
+            } catch (err) {
+                console.warn("Telemetry Fetch Error:", err);
+                if (!isSimulationMode) {
+                    setHardwareStatus(false, "LINK TIMEOUT");
+                }
+            }
+        }
+
+        function updateDashboard() {
+            let maxIntensity = 0;
+            let maxSector = 0;
+            let activeSectors = 0;
+
+            for (let i = 0; i < NUM_SECTORS; i++) {
+                const intensity = sectorIntensity[i];
+                if (intensity >= DETECTION_THRESHOLD) {
+                    activeSectors++;
+                }
+                if (intensity > maxIntensity) {
+                    maxIntensity = intensity;
+                    maxSector = i;
+                }
+            }
+
+            const strongestAngle = maxSector * STEP_ANGLE;
+
+            document.getElementById("intensityValue").textContent = maxIntensity.toFixed(0);
+            document.getElementById("frequencyValue").textContent = averageFrequency.toFixed(1);
+            document.getElementById("speedValue").textContent = targetSpeed.toFixed(1);
+            document.getElementById("angleValue").textContent = strongestAngle;
+
+            document.getElementById("intensityBarFill").style.width = `${Math.min(100, maxIntensity)}%`;
+            document.getElementById("speedBarFill").style.width = `${Math.min(100, (targetSpeed / 80) * 100)}%`;
+            document.getElementById("freqBarFill").style.width = `${Math.min(100, (averageFrequency / 500) * 100)}%`;
+            document.getElementById("angleBarFill").style.width = `${(strongestAngle / 360) * 100}%`;
+
+            document.getElementById("activeSectorsCount").textContent = `${activeSectors} / ${NUM_SECTORS} ACTIVE`;
+            document.getElementById("scopeTargetsBadge").textContent = `TARGETS: ${activeSectors}`;
+
+            const banner = document.getElementById("threatBanner");
+            const threatStatusText = document.getElementById("threatStatusText");
+            const threatIconBox = document.getElementById("threatIconBox");
+
+            banner.className = "threat-banner";
+
+            if (targetClass === 2) {
+                banner.classList.add("threat-drone");
+                threatStatusText.textContent = "CRITICAL: DRONE INTRUSION DETECTED";
+                threatIconBox.textContent = "🚨";
+            } else if (targetClass === 1) {
+                banner.classList.add("threat-human");
+                threatStatusText.textContent = "WARNING: HUMAN MOVEMENT DETECTED";
+                threatIconBox.textContent = "⚠️";
+            } else {
+                threatStatusText.textContent = "NO TARGET • CLEAR SKY";
+                threatIconBox.textContent = "🛡️";
+            }
+
+            updateSpectrumVisualizer();
+            updateTargetTable(activeSectors);
+        }
+
+        function updateTargetTable(activeCount) {
+            const tbody = document.getElementById("targetTableBody");
+            const badge = document.getElementById("targetListCountBadge");
+            badge.textContent = `${activeCount} CONTACT${activeCount === 1 ? '' : 'S'}`;
+
+            tbody.innerHTML = "";
+
+            if (activeCount === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-targets-state">
+                            No active RF targets detected above threshold.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            for (let i = 0; i < NUM_SECTORS; i++) {
+                const intensity = sectorIntensity[i];
+                if (intensity >= DETECTION_THRESHOLD) {
+                    const row = document.createElement("tr");
+                    const bearing = i * STEP_ANGLE;
+
+                    let tagHtml = `<span class="tag-threat tag-signal">SIGNAL</span>`;
+                    if (targetClass === 2 && Math.abs(bearing - (maxSectorIndex() * STEP_ANGLE)) <= 20) {
+                        tagHtml = `<span class="tag-threat tag-drone">DRONE</span>`;
+                    } else if (targetClass === 1 && Math.abs(bearing - (maxSectorIndex() * STEP_ANGLE)) <= 20) {
+                        tagHtml = `<span class="tag-threat tag-human">HUMAN</span>`;
+                    }
+
+                    row.innerHTML = `
+                        <td><strong>SEC-${i.toString().padStart(2, '0')}</strong></td>
+                        <td><strong>${bearing.toString().padStart(3, '0')}°</strong></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 50px; height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${intensity}%; height: 100%; background: ${intensityToRgb(intensity).str};"></div>
+                                </div>
+                                <span style="font-weight: 800;">${intensity.toFixed(0)}%</span>
+                            </div>
+                        </td>
+                        <td>${tagHtml}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            }
+        }
+
+        function maxSectorIndex() {
+            let maxVal = -1;
+            let idx = 0;
+            for (let i = 0; i < NUM_SECTORS; i++) {
+                if (sectorIntensity[i] > maxVal) {
+                    maxVal = sectorIntensity[i];
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        const downloadFileBtn = document.getElementById("downloadFileBtn");
+        if (downloadFileBtn) {
+            downloadFileBtn.addEventListener("click", () => {
+                const docContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+                const blob = new Blob([docContent], { type: "text/html;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "kram_radar.html";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        fetchThingSpeakData();
+        setInterval(fetchThingSpeakData, UPDATE_INTERVAL);
+        setInterval(() => {
+            if (isSimulationMode) updateSimulationData();
+        }, 1200);
+    </script>
 </body>
 </html>
